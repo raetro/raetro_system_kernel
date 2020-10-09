@@ -329,7 +329,7 @@ void fb_set(struct fb_info *info)
 		info->flags &= ~FBINFO_MISC_USEREVENT;
 		event.info = info;
 		event.data = &mode;
-		fb_notifier_call_chain(FB_EVENT_MODE_CHANGE_ALL, &event);
+		fb_notifier_call_chain(FB_EVENT_MODE_CHANGE, &event);
 	}
 }
 
@@ -338,11 +338,12 @@ static int mode_set(const char *val, const struct kernel_param *kp)
 	if(p_fbdev)
 	{
 		console_lock();
-		if (!lock_fb_info(&p_fbdev->info))
-		{
-			console_unlock();
-			return -ENODEV;
-		}
+		// TODO: error: invalid use of void expression
+//		if (!lock_fb_info(&p_fbdev->info))
+//		{
+//			console_unlock();
+//			return -ENODEV;
+//		}
 
 		memset(p_fbdev->fb_base, 0, resource_size(p_fbdev->fb_res));
 

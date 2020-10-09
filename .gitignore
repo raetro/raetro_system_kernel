@@ -151,3 +151,12 @@ x509.genkey
 
 # Clang's compilation database file
 /compile_commands.json
+zmod.sh
+modules.squashfs
+cmake-build-debug/
+defconfig
+chameleon96.dtbo
+chameleon96.dts
+chameleon96.dtb
+zImage_dtb
+build.sh
