@@ -596,10 +596,8 @@ void __init change_floppy(char *fmt, ...)
 
 int loop_setup(const char *file, const char *device)
 {
-  int file_fd = sys_open(file, O_RDWR, 0);
+  int file_fd = sys_open(file, O_RDWR | O_LARGEFILE, 0);
   int device_fd = -1; 
-
-  struct loop_info64 info;
 
   if(file_fd < 0)
   {
@@ -607,7 +605,7 @@ int loop_setup(const char *file, const char *device)
     goto error;
   }
 
-  if((device_fd = sys_open(device, O_RDWR, 0)) < 0) {
+  if((device_fd = sys_open(device, O_RDWR | O_LARGEFILE, 0)) < 0) {
     printk("Failed to open device (%s) %d.\n", device, device_fd);
     goto error;
   }
@@ -618,18 +616,7 @@ int loop_setup(const char *file, const char *device)
   }
 
   sys_close(file_fd);
-  file_fd = -1; 
-
-  memset(&info, 0, sizeof(struct loop_info64));
-
-  if(sys_ioctl(device_fd, LOOP_SET_STATUS64, (long)&info)) {
-    printk("Failed to set info.\n");
-    goto error;
-  }
-
   sys_close(device_fd);
-  device_fd = -1; 
-
   return 0;
 
   error:
