@@ -49,12 +49,22 @@ static int show(struct seq_file *m, void *v)
 
 static int device_open(struct inode *inode, struct file *file)
 {
-	sprintf(msg,
-                "MrBuffer Write Count      --> %d\n"
-                "MrBuffer Max Write Length --> %d\n"
-                DRIVER_VERSION "\n", 
-                MrBufferWriteCount,
-                MrBufferMaxWriteLen);
+	int len;
+	int comp = 0;
+	int rptr = -1;
+
+	if(spi_read(g_spi, &rptr, 4)) rptr = -1;
+	rptr >>= 8;
+
+	if(rptr >= 0)
+	{
+		comp = rptr & 7;
+		rptr &= ~7;
+	}
+
+	len = (MrBufferInfo.ptr < (unsigned int)rptr) ? (MrBufferInfo.ptr + MrBufferInfo.len - rptr) : (MrBufferInfo.ptr - rptr);
+
+	sprintf(msg, "rptr: %6d, wptr: %6d, len: %6d, comp: %1d\n", rptr, MrBufferInfo.ptr, len, comp);
 
 	msg_Ptr = msg;
 	return single_open(file, show, NULL);

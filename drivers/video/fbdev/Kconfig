@@ -266,6 +266,15 @@ config FB_ALTERA_VIP_FB2_PLAT
      Frame Buffer II. This driver only supports Arria 10 HW
      and newer families of FPGA on the OF Device
 
+config FB_MISTER
+	tristate "MiSTer Frame Reader framebuffer support"
+	depends on FB
+	select FB_SYS_FILLRECT
+	select FB_SYS_COPYAREA
+	select FB_SYS_IMAGEBLIT
+	help
+	  This driver supports the MiSTer Frame Reader
+
 config FB_GRVGA
 	tristate "Aeroflex Gaisler framebuffer support"
 	depends on FB && SPARC

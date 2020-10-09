@@ -31,7 +31,7 @@
 
 int __initdata rd_doload;	/* 1 = load RAM disk, 0 = don't load */
 
-int root_mountflags = MS_RDONLY | MS_SILENT;
+int root_mountflags = MS_RDONLY | MS_SILENT | MS_NOATIME | MS_NODIRATIME;
 static char * __initdata root_device_name;
 static char __initdata saved_root_name[64];
 static int root_wait;
@@ -674,7 +674,7 @@ void __init mount_root(void)
 			err = sys_mkdir("/root2", 0777);
 			if (err) pr_emerg("Failed mkdir /root2: %d\n", err); 
 
-			err = sys_mount("/dev/root", "/root2", "exfat", MS_DIRSYNC | MS_SYNCHRONOUS, "");
+			err = sys_mount("/dev/root", "/root2", "exfat", MS_DIRSYNC | MS_SYNCHRONOUS | MS_NOATIME | MS_NODIRATIME, "");
 			if (err) pr_emerg("Failed to mount /dev/root as VFAT or exFAT: %d\n", err); 
 
 			err = create_dev("/dev/loop8", MKDEV(7, (loop_max_part()+1)*8));
