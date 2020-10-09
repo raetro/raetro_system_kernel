@@ -1923,7 +1923,7 @@ max3421_probe(struct spi_device *spi)
 	}
 
 	retval = request_irq(spi->irq, max3421_irq_handler,
-			     IRQF_TRIGGER_LOW, "max3421", hcd);
+			     0, "max3421", hcd);
 	if (retval < 0) {
 		dev_err(&spi->dev, "failed to request irq %d\n", spi->irq);
 		goto error;

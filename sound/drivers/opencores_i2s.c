@@ -72,7 +72,7 @@ static int opencores_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 	unsigned int mask, val;
 
 	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE)
-		mask = CAP_ENABLE;
+		return -EINVAL; //mask = CAP_ENABLE;
 	else
 		mask = PB_ENABLE;
 
