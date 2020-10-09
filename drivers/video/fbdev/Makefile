@@ -11,9 +11,10 @@ obj-$(CONFIG_FB_MACMODES)      += macmodes.o
 obj-$(CONFIG_FB_WMT_GE_ROPS)   += wmt_ge_rops.o
 
 # Hardware specific drivers go first
-obj-$(CONFIG_FB_ALTERA_VIP_FB2) += altvipfb2.o
-obj-$(CONFIG_FB_ALTERA_VIP_FB2_PLAT) += altvipfb2_drv.o
-altvipfb2_drv-objs := altvipfb2-plat.o altvipfb2.o
+obj-$(CONFIG_FB_ALTERA_VIP)	  += altvipfb.o
+obj-$(CONFIG_FB_MISTER)           += MiSTer_fb.o
+obj-$(CONFIG_FB_ALTERA_VIP_FB2)   += altvipfb2.o
+obj-$(CONFIG_FB_ALTERA_VIP_FB2_PLAT) += altvipfb2_drv.o altvipfb2_drv-objs := altvipfb2-plat.o altvipfb2.o
 obj-$(CONFIG_FB_AMIGA)            += amifb.o c2p_planar.o
 obj-$(CONFIG_FB_ARC)              += arcfb.o
 obj-$(CONFIG_FB_CLPS711X)	  += clps711x-fb.o
@@ -119,10 +120,12 @@ obj-y                             += omap2/
 obj-$(CONFIG_XEN_FBDEV_FRONTEND)  += xen-fbfront.o
 obj-$(CONFIG_FB_CARMINE)          += carminefb.o
 obj-$(CONFIG_FB_MB862XX)	  += mb862xx/
+obj-$(CONFIG_FB_JZ4740)		  += jz4740_fb.o
 obj-$(CONFIG_FB_PUV3_UNIGFX)      += fb-puv3.o
 obj-$(CONFIG_FB_HYPERV)		  += hyperv_fb.o
 obj-$(CONFIG_FB_OPENCORES)	  += ocfb.o
 obj-$(CONFIG_FB_SM712)		  += sm712fb.o
+obj-$(CONFIG_FB_TDA19988)	  += tda19988fb.o
 
 # Platform or fallback drivers go here
 obj-$(CONFIG_FB_UVESA)            += uvesafb.o
