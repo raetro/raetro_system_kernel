@@ -1,0 +1,221 @@
+/*
+ * Copyright Altera Corporation (C) 2015. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "socfpga_cyclone5.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Terasic DE10-nano";
+	compatible = "altr,socfpga-cyclone5", "altr,socfpga";
+
+	chosen {
+		bootargs = "earlyprintk";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		name = "memory";
+		device_type = "memory";
+		reg = <0x0 0x40000000>; /* 1GB */
+	};
+
+	aliases {
+		ethernet0 = &gmac1;
+	};
+
+	regulator_3_3v: 3-3-v-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		hps0 {
+			label = "hps_led0";
+			gpios = <&portb 24 0>;
+			linux,default-trigger = "mmc0";
+		};
+	};
+/*
+	ltcmode {
+		compatible = "gpio-leds";
+		ltcsw {
+			label = "ltc_sw";
+			gpios = <&portb 11 0>;
+			default-state = "off";
+		};
+	};
+*/
+
+	i2c_gpio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "i2c-gpio";
+		gpios = <&portb 22 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)
+                         &portb 23 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <2>;
+
+		rtc_at_68 {
+		        compatible = "m41t81";
+		        reg = <0x68>;
+		};
+		rtc_at_6F {
+		        compatible = "mcp7941x";
+		        reg = <0x6F>;
+		};
+	};
+
+	vip {
+		compatible = "MiSTer,VIP";
+		reg = <0xff231000 0x1000>; 
+	};
+
+	MiSTer_fb {
+		compatible = "MiSTer_fb";
+		reg = <0x22000000 0x800000>; 
+		interrupt-parent = <&intc>;
+		interrupts = < 0 40 1 >;
+	};
+
+    audio {
+        compatible = "MiSTer,Audio";
+        cpu-link = <&core_i2s>;
+        reg = <0xff200010 0x10>;
+    };
+
+	clk48: clk48 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency  = <24576000>;
+		clock-output-names = "clk48";
+	};
+
+	clk44: clk44 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency  = <33868800>;
+		clock-output-names = "clk44";
+	};
+
+	core_i2s: core_i2s {
+		#sound-dai-cells = <1>;
+		compatible = "opencores,i2s";
+		reg = <0xff200000 0x10>, <0xff200020 0x20>;
+		clocks = <&clk44>, <&clk48>;
+		clock-names = "clk44", "clk48";
+		dmas = <&pdma 0>, <&pdma 1>;
+		dma-names = "tx", "rx";
+	};
+};
+
+&gmac1 {
+	status = "okay";
+	phy-mode = "rgmii";
+
+	txd0-skew-ps = <0>; /* -420ps */
+	txd1-skew-ps = <0>; /* -420ps */
+	txd2-skew-ps = <0>; /* -420ps */
+	txd3-skew-ps = <0>; /* -420ps */
+	rxd0-skew-ps = <420>; /* 0ps */
+	rxd1-skew-ps = <420>; /* 0ps */
+	rxd2-skew-ps = <420>; /* 0ps */
+	rxd3-skew-ps = <420>; /* 0ps */
+	txen-skew-ps = <0>; /* -420ps */
+	txc-skew-ps = <1860>; /* 960ps */
+	rxdv-skew-ps = <420>; /* 0ps */
+	rxc-skew-ps = <1680>; /* 780ps */
+
+	max-frame-size = <3800>;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpio2 {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	adxl345: adxl345@53 {
+		compatible = "adi,adxl345";
+		reg = <0x53>;
+
+		interrupt-parent = <&portc>;
+		interrupts = <3 2>;
+	};
+};
+
+&spi0 {
+	status = "okay";
+	timeouts = <3>;
+
+	spiusb: spiusb@0 {
+		compatible = "MiSTer,spi-audio";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+		spi-cpha;
+		spi-cpol;
+		status = "okay";
+	};
+
+};
+
+&spi1 {
+	status = "okay";
+	timeouts = <3>;
+
+	spibri: spibri@0 {
+		status = "okay";
+		compatible = "spidev";
+		spi-max-frequency = <25000000>;
+		reg = <0>;
+	};
+
+};
+
+&mmc0 {
+	vmmc-supply = <&regulator_3_3v>;
+	vqmmc-supply = <&regulator_3_3v>;
+	status = "okay";
+};
+
+&uart0 {
+	/delete-property/dmas;
+	/delete-property/dma-names;
+	status = "okay";
+};
+
+&uart1 {
+	/delete-property/dmas;
+	/delete-property/dma-names;
+	status = "okay";
+};
+
+&usb1 {
+	disable-over-current;
+	dr_mode = "host";
+	status = "okay";
+};

@@ -2,26 +2,32 @@
 /*
  * Device Tree file for the Chameleon96
  *
+ * Copyright (c) 2020 Marcus Andrade <marcus@raetro.org>
  * Copyright (c) 2018 Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
  */
 
-#include <dt-bindings/gpio/gpio.h>
-
 #include "socfpga_cyclone5.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/display/tda998x.h>
 
 / {
-	model = "Novetech Chameleon96";
-	compatible = "novtech,chameleon96", "altr,socfpga-cyclone5", "altr,socfpga";
+	model = "Arrow Chameleon96";
+	compatible = "altr,socfpga-cyclone5", "altr,socfpga";
 
 	chosen {
 		bootargs = "earlyprintk";
 		stdout-path = "serial0:115200n8";
 	};
 
-	memory@0 {
+	memory {
 		name = "memory";
 		device_type = "memory";
 		reg = <0x0 0x20000000>; /* 512MB */
+	};
+
+    ethernet@ff702000 {
+		status = "disabled";
 	};
 
 	regulator_3_3v: 3-3-v-regulator {
@@ -31,34 +37,88 @@
 		regulator-max-microvolt = <3300000>;
 	};
 
+    hps_bridges: bridge@c0000000 {
+			compatible = "altr,bridge-17.1", "simple-bus";
+			reg = <0xc0000000 0x20000000>, <0xff200000 0x00200000>;
+			reg-names = "axi_h2f", "axi_h2f_lw";
+			#address-cells = <2>;
+			#size-cells = <1>;
+			ranges = <0x00000000 0x00000000 0xc0000000 0x00000008>;
+			sysid: sysid@000000000 {
+				compatible = "altr,sysid-17.1", "altr,sysid-1.0";
+				reg = <0x00000000 0x00000000 0x00000008>;
+				id = <3314942210>;
+				timestamp = <1606259892>;
+			};
+		};
+
 	leds {
 		compatible = "gpio-leds";
 
-		user_led1 {
-			label = "green:user1";
-			gpios = <&porta 14 GPIO_ACTIVE_LOW>;
+		// user_led1 {
+		// 	label = "green:user1";
+		// 	gpios = <&porta 14 GPIO_ACTIVE_LOW>;
+		// 	linux,default-trigger = "heartbeat";
+		// };
+
+		// user_led2 {
+		// 	label = "green:user2";
+		// 	gpios = <&porta 22 GPIO_ACTIVE_LOW>;
+		// 	linux,default-trigger = "mmc0";
+		// };
+
+		hps0 {
+			label = "green:user3";
+			gpios = <&porta 25 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "heartbeat";
 		};
 
-		user_led2 {
-			label = "green:user2";
-			gpios = <&porta 22 GPIO_ACTIVE_LOW>;
+		hps1 {
+			label = "green:user4";
+			gpios = <&portb 34 GPIO_ACTIVE_LOW>;
+			panic-indicator;
 			linux,default-trigger = "mmc0";
 		};
-
-		user_led3 {
-			label = "green:user3";
-			gpios = <&porta 25 GPIO_ACTIVE_LOW>;
-			linux,default-trigger = "none";
-		};
-
-		user_led4 {
-			label = "green:user4";
-			gpios = <&portb 3 GPIO_ACTIVE_LOW>;
-			panic-indicator;
-			linux,default-trigger = "none";
-		};
 	};
+
+
+    MiSTer_fb {
+		compatible = "MiSTer_fb";
+		reg = <0x12000000 0x800000>; 
+		interrupt-parent = <&intc>;
+		interrupts = < 0 40 1 >;
+	};
+
+    audio {
+        compatible = "MiSTer,Audio";
+        cpu-link = <&core_i2s>;
+        reg = <0xff200010 0x10>;
+    };
+
+	clk48: clk48 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency  = <24576000>;
+		clock-output-names = "clk48";
+	};
+
+	clk44: clk44 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency  = <33868800>;
+		clock-output-names = "clk44";
+	};
+
+	core_i2s: core_i2s {
+		#sound-dai-cells = <1>;
+		compatible = "opencores,i2s";
+		reg = <0xff200000 0x10>, <0xff200020 0x20>;
+		clocks = <&clk44>, <&clk48>;
+		clock-names = "clk44", "clk48";
+		dmas = <&pdma 0>, <&pdma 1>;
+		dma-names = "tx", "rx";
+	};
+
 };
 
 &gpio0 {
@@ -69,26 +129,32 @@
 	status = "okay";
 };
 
+&gpio2 {
+	status = "okay";
+};
+
 &i2c0 {
 	/* On Low speed expansion */
 	label = "LS-I2C0";
-	status = "okay";
+	status = "disabled";
 };
 
 &i2c1 {
 	/* On Low speed expansion */
 	label = "LS-I2C1";
-	status = "okay";
+	status = "disabled";
 };
+
 
 &i2c2 {
 	status = "okay";
+    label = "HDMI-OUT";
 };
 
 &i2c3 {
 	/* On High speed expansion */
 	label = "HS-I2C2";
-	status = "okay";
+	status = "disabled";
 };
 
 &mmc0 {
@@ -100,13 +166,18 @@
 &spi0 {
 	/* On High speed expansion */
 	label = "HS-SPI1";
-	status = "okay";
+	status = "disabled";
 };
 
 &spi1 {
-	/* On Low speed expansion */
-	label = "LS-SPI0";
 	status = "okay";
+	timeouts = <3>;
+	spibri@0 {
+		status = "okay";
+		compatible = "spidev";
+		spi-max-frequency = <25000000>;
+		reg = <0>;
+	};
 };
 
 &uart0 {
@@ -118,7 +189,7 @@
 &uart1 {
 	/* On Low speed expansion */
 	label = "LS-UART0";
-	status = "okay";
+	status = "disabled";
 };
 
 &usbphy0 {

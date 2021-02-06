@@ -37,6 +37,12 @@ config SND_AC97_CODEC
 	select AC97_BUS
 	select SND_VMASTER
 
+config SND_MISTER_AUDIO
+        tristate "MiSTer Audio (SPI)"
+        default n
+        help
+          Support for MiSTer audio through SPI.
+
 menuconfig SND_DRIVERS
 	bool "Generic sound devices"
 	default y
@@ -87,6 +93,13 @@ config SND_DUMMY
 
 	  To compile this driver as a module, choose M here: the module
 	  will be called snd-dummy.
+
+config SND_OCI2S
+	tristate "Opencores I2S soundcard (FPGA)"
+	select SND_PCM
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	help
+	  Say Y here to include the Opencores I2S driver.
 
 config SND_ALOOP
         tristate "Generic loopback driver (PCM)"

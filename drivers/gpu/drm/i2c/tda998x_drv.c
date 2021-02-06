@@ -33,11 +33,11 @@
 
 #include <media/cec-notifier.h>
 
-#define DBG(fmt, ...) DRM_DEBUG(fmt"\n", ##__VA_ARGS__)
+#define DBG(fmt, ...) DRM_DEBUG(fmt "\n", ##__VA_ARGS__)
 
 struct tda998x_audio_port {
-	u8 format;		/* AFMT_xxx */
-	u8 config;		/* AP value */
+	u8 format; /* AFMT_xxx */
+	u8 config; /* AP value */
 };
 
 struct tda998x_priv {
@@ -78,12 +78,9 @@ struct tda998x_priv {
 	struct cec_notifier *cec_notify;
 };
 
-#define conn_to_tda998x_priv(x) \
-	container_of(x, struct tda998x_priv, connector)
-#define enc_to_tda998x_priv(x) \
-	container_of(x, struct tda998x_priv, encoder)
-#define bridge_to_tda998x_priv(x) \
-	container_of(x, struct tda998x_priv, bridge)
+#define conn_to_tda998x_priv(x) container_of(x, struct tda998x_priv, connector)
+#define enc_to_tda998x_priv(x) container_of(x, struct tda998x_priv, encoder)
+#define bridge_to_tda998x_priv(x) container_of(x, struct tda998x_priv, bridge)
 
 /* The TDA9988 series of devices use a paged register scheme.. to simplify
  * things we encode the page # in upper bits of the register #.  To read/
@@ -92,307 +89,297 @@ struct tda998x_priv {
  */
 
 #define REG(page, addr) (((page) << 8) | (addr))
-#define REG2ADDR(reg)   ((reg) & 0xff)
-#define REG2PAGE(reg)   (((reg) >> 8) & 0xff)
+#define REG2ADDR(reg) ((reg)&0xff)
+#define REG2PAGE(reg) (((reg) >> 8) & 0xff)
 
-#define REG_CURPAGE               0xff                /* write */
-
+#define REG_CURPAGE 0xff /* write */
 
 /* Page 00h: General Control */
-#define REG_VERSION_LSB           REG(0x00, 0x00)     /* read */
-#define REG_MAIN_CNTRL0           REG(0x00, 0x01)     /* read/write */
-# define MAIN_CNTRL0_SR           (1 << 0)
-# define MAIN_CNTRL0_DECS         (1 << 1)
-# define MAIN_CNTRL0_DEHS         (1 << 2)
-# define MAIN_CNTRL0_CECS         (1 << 3)
-# define MAIN_CNTRL0_CEHS         (1 << 4)
-# define MAIN_CNTRL0_SCALER       (1 << 7)
-#define REG_VERSION_MSB           REG(0x00, 0x02)     /* read */
-#define REG_SOFTRESET             REG(0x00, 0x0a)     /* write */
-# define SOFTRESET_AUDIO          (1 << 0)
-# define SOFTRESET_I2C_MASTER     (1 << 1)
-#define REG_DDC_DISABLE           REG(0x00, 0x0b)     /* read/write */
-#define REG_CCLK_ON               REG(0x00, 0x0c)     /* read/write */
-#define REG_I2C_MASTER            REG(0x00, 0x0d)     /* read/write */
-# define I2C_MASTER_DIS_MM        (1 << 0)
-# define I2C_MASTER_DIS_FILT      (1 << 1)
-# define I2C_MASTER_APP_STRT_LAT  (1 << 2)
-#define REG_FEAT_POWERDOWN        REG(0x00, 0x0e)     /* read/write */
-# define FEAT_POWERDOWN_PREFILT   BIT(0)
-# define FEAT_POWERDOWN_CSC       BIT(1)
-# define FEAT_POWERDOWN_SPDIF     (1 << 3)
-#define REG_INT_FLAGS_0           REG(0x00, 0x0f)     /* read/write */
-#define REG_INT_FLAGS_1           REG(0x00, 0x10)     /* read/write */
-#define REG_INT_FLAGS_2           REG(0x00, 0x11)     /* read/write */
-# define INT_FLAGS_2_EDID_BLK_RD  (1 << 1)
-#define REG_ENA_ACLK              REG(0x00, 0x16)     /* read/write */
-#define REG_ENA_VP_0              REG(0x00, 0x18)     /* read/write */
-#define REG_ENA_VP_1              REG(0x00, 0x19)     /* read/write */
-#define REG_ENA_VP_2              REG(0x00, 0x1a)     /* read/write */
-#define REG_ENA_AP                REG(0x00, 0x1e)     /* read/write */
-#define REG_VIP_CNTRL_0           REG(0x00, 0x20)     /* write */
-# define VIP_CNTRL_0_MIRR_A       (1 << 7)
-# define VIP_CNTRL_0_SWAP_A(x)    (((x) & 7) << 4)
-# define VIP_CNTRL_0_MIRR_B       (1 << 3)
-# define VIP_CNTRL_0_SWAP_B(x)    (((x) & 7) << 0)
-#define REG_VIP_CNTRL_1           REG(0x00, 0x21)     /* write */
-# define VIP_CNTRL_1_MIRR_C       (1 << 7)
-# define VIP_CNTRL_1_SWAP_C(x)    (((x) & 7) << 4)
-# define VIP_CNTRL_1_MIRR_D       (1 << 3)
-# define VIP_CNTRL_1_SWAP_D(x)    (((x) & 7) << 0)
-#define REG_VIP_CNTRL_2           REG(0x00, 0x22)     /* write */
-# define VIP_CNTRL_2_MIRR_E       (1 << 7)
-# define VIP_CNTRL_2_SWAP_E(x)    (((x) & 7) << 4)
-# define VIP_CNTRL_2_MIRR_F       (1 << 3)
-# define VIP_CNTRL_2_SWAP_F(x)    (((x) & 7) << 0)
-#define REG_VIP_CNTRL_3           REG(0x00, 0x23)     /* write */
-# define VIP_CNTRL_3_X_TGL        (1 << 0)
-# define VIP_CNTRL_3_H_TGL        (1 << 1)
-# define VIP_CNTRL_3_V_TGL        (1 << 2)
-# define VIP_CNTRL_3_EMB          (1 << 3)
-# define VIP_CNTRL_3_SYNC_DE      (1 << 4)
-# define VIP_CNTRL_3_SYNC_HS      (1 << 5)
-# define VIP_CNTRL_3_DE_INT       (1 << 6)
-# define VIP_CNTRL_3_EDGE         (1 << 7)
-#define REG_VIP_CNTRL_4           REG(0x00, 0x24)     /* write */
-# define VIP_CNTRL_4_BLC(x)       (((x) & 3) << 0)
-# define VIP_CNTRL_4_BLANKIT(x)   (((x) & 3) << 2)
-# define VIP_CNTRL_4_CCIR656      (1 << 4)
-# define VIP_CNTRL_4_656_ALT      (1 << 5)
-# define VIP_CNTRL_4_TST_656      (1 << 6)
-# define VIP_CNTRL_4_TST_PAT      (1 << 7)
-#define REG_VIP_CNTRL_5           REG(0x00, 0x25)     /* write */
-# define VIP_CNTRL_5_CKCASE       (1 << 0)
-# define VIP_CNTRL_5_SP_CNT(x)    (((x) & 3) << 1)
-#define REG_MUX_AP                REG(0x00, 0x26)     /* read/write */
-# define MUX_AP_SELECT_I2S	  0x64
-# define MUX_AP_SELECT_SPDIF	  0x40
-#define REG_MUX_VP_VIP_OUT        REG(0x00, 0x27)     /* read/write */
-#define REG_MAT_CONTRL            REG(0x00, 0x80)     /* write */
-# define MAT_CONTRL_MAT_SC(x)     (((x) & 3) << 0)
-# define MAT_CONTRL_MAT_BP        (1 << 2)
-#define REG_VIDFORMAT             REG(0x00, 0xa0)     /* write */
-#define REG_REFPIX_MSB            REG(0x00, 0xa1)     /* write */
-#define REG_REFPIX_LSB            REG(0x00, 0xa2)     /* write */
-#define REG_REFLINE_MSB           REG(0x00, 0xa3)     /* write */
-#define REG_REFLINE_LSB           REG(0x00, 0xa4)     /* write */
-#define REG_NPIX_MSB              REG(0x00, 0xa5)     /* write */
-#define REG_NPIX_LSB              REG(0x00, 0xa6)     /* write */
-#define REG_NLINE_MSB             REG(0x00, 0xa7)     /* write */
-#define REG_NLINE_LSB             REG(0x00, 0xa8)     /* write */
-#define REG_VS_LINE_STRT_1_MSB    REG(0x00, 0xa9)     /* write */
-#define REG_VS_LINE_STRT_1_LSB    REG(0x00, 0xaa)     /* write */
-#define REG_VS_PIX_STRT_1_MSB     REG(0x00, 0xab)     /* write */
-#define REG_VS_PIX_STRT_1_LSB     REG(0x00, 0xac)     /* write */
-#define REG_VS_LINE_END_1_MSB     REG(0x00, 0xad)     /* write */
-#define REG_VS_LINE_END_1_LSB     REG(0x00, 0xae)     /* write */
-#define REG_VS_PIX_END_1_MSB      REG(0x00, 0xaf)     /* write */
-#define REG_VS_PIX_END_1_LSB      REG(0x00, 0xb0)     /* write */
-#define REG_VS_LINE_STRT_2_MSB    REG(0x00, 0xb1)     /* write */
-#define REG_VS_LINE_STRT_2_LSB    REG(0x00, 0xb2)     /* write */
-#define REG_VS_PIX_STRT_2_MSB     REG(0x00, 0xb3)     /* write */
-#define REG_VS_PIX_STRT_2_LSB     REG(0x00, 0xb4)     /* write */
-#define REG_VS_LINE_END_2_MSB     REG(0x00, 0xb5)     /* write */
-#define REG_VS_LINE_END_2_LSB     REG(0x00, 0xb6)     /* write */
-#define REG_VS_PIX_END_2_MSB      REG(0x00, 0xb7)     /* write */
-#define REG_VS_PIX_END_2_LSB      REG(0x00, 0xb8)     /* write */
-#define REG_HS_PIX_START_MSB      REG(0x00, 0xb9)     /* write */
-#define REG_HS_PIX_START_LSB      REG(0x00, 0xba)     /* write */
-#define REG_HS_PIX_STOP_MSB       REG(0x00, 0xbb)     /* write */
-#define REG_HS_PIX_STOP_LSB       REG(0x00, 0xbc)     /* write */
-#define REG_VWIN_START_1_MSB      REG(0x00, 0xbd)     /* write */
-#define REG_VWIN_START_1_LSB      REG(0x00, 0xbe)     /* write */
-#define REG_VWIN_END_1_MSB        REG(0x00, 0xbf)     /* write */
-#define REG_VWIN_END_1_LSB        REG(0x00, 0xc0)     /* write */
-#define REG_VWIN_START_2_MSB      REG(0x00, 0xc1)     /* write */
-#define REG_VWIN_START_2_LSB      REG(0x00, 0xc2)     /* write */
-#define REG_VWIN_END_2_MSB        REG(0x00, 0xc3)     /* write */
-#define REG_VWIN_END_2_LSB        REG(0x00, 0xc4)     /* write */
-#define REG_DE_START_MSB          REG(0x00, 0xc5)     /* write */
-#define REG_DE_START_LSB          REG(0x00, 0xc6)     /* write */
-#define REG_DE_STOP_MSB           REG(0x00, 0xc7)     /* write */
-#define REG_DE_STOP_LSB           REG(0x00, 0xc8)     /* write */
-#define REG_TBG_CNTRL_0           REG(0x00, 0xca)     /* write */
-# define TBG_CNTRL_0_TOP_TGL      (1 << 0)
-# define TBG_CNTRL_0_TOP_SEL      (1 << 1)
-# define TBG_CNTRL_0_DE_EXT       (1 << 2)
-# define TBG_CNTRL_0_TOP_EXT      (1 << 3)
-# define TBG_CNTRL_0_FRAME_DIS    (1 << 5)
-# define TBG_CNTRL_0_SYNC_MTHD    (1 << 6)
-# define TBG_CNTRL_0_SYNC_ONCE    (1 << 7)
-#define REG_TBG_CNTRL_1           REG(0x00, 0xcb)     /* write */
-# define TBG_CNTRL_1_H_TGL        (1 << 0)
-# define TBG_CNTRL_1_V_TGL        (1 << 1)
-# define TBG_CNTRL_1_TGL_EN       (1 << 2)
-# define TBG_CNTRL_1_X_EXT        (1 << 3)
-# define TBG_CNTRL_1_H_EXT        (1 << 4)
-# define TBG_CNTRL_1_V_EXT        (1 << 5)
-# define TBG_CNTRL_1_DWIN_DIS     (1 << 6)
-#define REG_ENABLE_SPACE          REG(0x00, 0xd6)     /* write */
-#define REG_HVF_CNTRL_0           REG(0x00, 0xe4)     /* write */
-# define HVF_CNTRL_0_SM           (1 << 7)
-# define HVF_CNTRL_0_RWB          (1 << 6)
-# define HVF_CNTRL_0_PREFIL(x)    (((x) & 3) << 2)
-# define HVF_CNTRL_0_INTPOL(x)    (((x) & 3) << 0)
-#define REG_HVF_CNTRL_1           REG(0x00, 0xe5)     /* write */
-# define HVF_CNTRL_1_FOR          (1 << 0)
-# define HVF_CNTRL_1_YUVBLK       (1 << 1)
-# define HVF_CNTRL_1_VQR(x)       (((x) & 3) << 2)
-# define HVF_CNTRL_1_PAD(x)       (((x) & 3) << 4)
-# define HVF_CNTRL_1_SEMI_PLANAR  (1 << 6)
-#define REG_RPT_CNTRL             REG(0x00, 0xf0)     /* write */
-#define REG_I2S_FORMAT            REG(0x00, 0xfc)     /* read/write */
-# define I2S_FORMAT(x)            (((x) & 3) << 0)
-#define REG_AIP_CLKSEL            REG(0x00, 0xfd)     /* write */
-# define AIP_CLKSEL_AIP_SPDIF	  (0 << 3)
-# define AIP_CLKSEL_AIP_I2S	  (1 << 3)
-# define AIP_CLKSEL_FS_ACLK	  (0 << 0)
-# define AIP_CLKSEL_FS_MCLK	  (1 << 0)
-# define AIP_CLKSEL_FS_FS64SPDIF  (2 << 0)
+#define REG_VERSION_LSB REG(0x00, 0x00) /* read */
+#define REG_MAIN_CNTRL0 REG(0x00, 0x01) /* read/write */
+#define MAIN_CNTRL0_SR (1 << 0)
+#define MAIN_CNTRL0_DECS (1 << 1)
+#define MAIN_CNTRL0_DEHS (1 << 2)
+#define MAIN_CNTRL0_CECS (1 << 3)
+#define MAIN_CNTRL0_CEHS (1 << 4)
+#define MAIN_CNTRL0_SCALER (1 << 7)
+#define REG_VERSION_MSB REG(0x00, 0x02) /* read */
+#define REG_SOFTRESET REG(0x00, 0x0a) /* write */
+#define SOFTRESET_AUDIO (1 << 0)
+#define SOFTRESET_I2C_MASTER (1 << 1)
+#define REG_DDC_DISABLE REG(0x00, 0x0b) /* read/write */
+#define REG_CCLK_ON REG(0x00, 0x0c) /* read/write */
+#define REG_I2C_MASTER REG(0x00, 0x0d) /* read/write */
+#define I2C_MASTER_DIS_MM (1 << 0)
+#define I2C_MASTER_DIS_FILT (1 << 1)
+#define I2C_MASTER_APP_STRT_LAT (1 << 2)
+#define REG_FEAT_POWERDOWN REG(0x00, 0x0e) /* read/write */
+#define FEAT_POWERDOWN_PREFILT BIT(0)
+#define FEAT_POWERDOWN_CSC BIT(1)
+#define FEAT_POWERDOWN_SPDIF (1 << 3)
+#define REG_INT_FLAGS_0 REG(0x00, 0x0f) /* read/write */
+#define REG_INT_FLAGS_1 REG(0x00, 0x10) /* read/write */
+#define REG_INT_FLAGS_2 REG(0x00, 0x11) /* read/write */
+#define INT_FLAGS_2_EDID_BLK_RD (1 << 1)
+#define REG_ENA_ACLK REG(0x00, 0x16) /* read/write */
+#define REG_ENA_VP_0 REG(0x00, 0x18) /* read/write */
+#define REG_ENA_VP_1 REG(0x00, 0x19) /* read/write */
+#define REG_ENA_VP_2 REG(0x00, 0x1a) /* read/write */
+#define REG_ENA_AP REG(0x00, 0x1e) /* read/write */
+#define REG_VIP_CNTRL_0 REG(0x00, 0x20) /* write */
+#define VIP_CNTRL_0_MIRR_A (1 << 7)
+#define VIP_CNTRL_0_SWAP_A(x) (((x)&7) << 4)
+#define VIP_CNTRL_0_MIRR_B (1 << 3)
+#define VIP_CNTRL_0_SWAP_B(x) (((x)&7) << 0)
+#define REG_VIP_CNTRL_1 REG(0x00, 0x21) /* write */
+#define VIP_CNTRL_1_MIRR_C (1 << 7)
+#define VIP_CNTRL_1_SWAP_C(x) (((x)&7) << 4)
+#define VIP_CNTRL_1_MIRR_D (1 << 3)
+#define VIP_CNTRL_1_SWAP_D(x) (((x)&7) << 0)
+#define REG_VIP_CNTRL_2 REG(0x00, 0x22) /* write */
+#define VIP_CNTRL_2_MIRR_E (1 << 7)
+#define VIP_CNTRL_2_SWAP_E(x) (((x)&7) << 4)
+#define VIP_CNTRL_2_MIRR_F (1 << 3)
+#define VIP_CNTRL_2_SWAP_F(x) (((x)&7) << 0)
+#define REG_VIP_CNTRL_3 REG(0x00, 0x23) /* write */
+#define VIP_CNTRL_3_X_TGL (1 << 0)
+#define VIP_CNTRL_3_H_TGL (1 << 1)
+#define VIP_CNTRL_3_V_TGL (1 << 2)
+#define VIP_CNTRL_3_EMB (1 << 3)
+#define VIP_CNTRL_3_SYNC_DE (1 << 4)
+#define VIP_CNTRL_3_SYNC_HS (1 << 5)
+#define VIP_CNTRL_3_DE_INT (1 << 6)
+#define VIP_CNTRL_3_EDGE (1 << 7)
+#define REG_VIP_CNTRL_4 REG(0x00, 0x24) /* write */
+#define VIP_CNTRL_4_BLC(x) (((x)&3) << 0)
+#define VIP_CNTRL_4_BLANKIT(x) (((x)&3) << 2)
+#define VIP_CNTRL_4_CCIR656 (1 << 4)
+#define VIP_CNTRL_4_656_ALT (1 << 5)
+#define VIP_CNTRL_4_TST_656 (1 << 6)
+#define VIP_CNTRL_4_TST_PAT (1 << 7)
+#define REG_VIP_CNTRL_5 REG(0x00, 0x25) /* write */
+#define VIP_CNTRL_5_CKCASE (1 << 0)
+#define VIP_CNTRL_5_SP_CNT(x) (((x)&3) << 1)
+#define REG_MUX_AP REG(0x00, 0x26) /* read/write */
+#define MUX_AP_SELECT_I2S 0x64
+#define MUX_AP_SELECT_SPDIF 0x40
+#define REG_MUX_VP_VIP_OUT REG(0x00, 0x27) /* read/write */
+#define REG_MAT_CONTRL REG(0x00, 0x80) /* write */
+#define MAT_CONTRL_MAT_SC(x) (((x)&3) << 0)
+#define MAT_CONTRL_MAT_BP (1 << 2)
+#define REG_VIDFORMAT REG(0x00, 0xa0) /* write */
+#define REG_REFPIX_MSB REG(0x00, 0xa1) /* write */
+#define REG_REFPIX_LSB REG(0x00, 0xa2) /* write */
+#define REG_REFLINE_MSB REG(0x00, 0xa3) /* write */
+#define REG_REFLINE_LSB REG(0x00, 0xa4) /* write */
+#define REG_NPIX_MSB REG(0x00, 0xa5) /* write */
+#define REG_NPIX_LSB REG(0x00, 0xa6) /* write */
+#define REG_NLINE_MSB REG(0x00, 0xa7) /* write */
+#define REG_NLINE_LSB REG(0x00, 0xa8) /* write */
+#define REG_VS_LINE_STRT_1_MSB REG(0x00, 0xa9) /* write */
+#define REG_VS_LINE_STRT_1_LSB REG(0x00, 0xaa) /* write */
+#define REG_VS_PIX_STRT_1_MSB REG(0x00, 0xab) /* write */
+#define REG_VS_PIX_STRT_1_LSB REG(0x00, 0xac) /* write */
+#define REG_VS_LINE_END_1_MSB REG(0x00, 0xad) /* write */
+#define REG_VS_LINE_END_1_LSB REG(0x00, 0xae) /* write */
+#define REG_VS_PIX_END_1_MSB REG(0x00, 0xaf) /* write */
+#define REG_VS_PIX_END_1_LSB REG(0x00, 0xb0) /* write */
+#define REG_VS_LINE_STRT_2_MSB REG(0x00, 0xb1) /* write */
+#define REG_VS_LINE_STRT_2_LSB REG(0x00, 0xb2) /* write */
+#define REG_VS_PIX_STRT_2_MSB REG(0x00, 0xb3) /* write */
+#define REG_VS_PIX_STRT_2_LSB REG(0x00, 0xb4) /* write */
+#define REG_VS_LINE_END_2_MSB REG(0x00, 0xb5) /* write */
+#define REG_VS_LINE_END_2_LSB REG(0x00, 0xb6) /* write */
+#define REG_VS_PIX_END_2_MSB REG(0x00, 0xb7) /* write */
+#define REG_VS_PIX_END_2_LSB REG(0x00, 0xb8) /* write */
+#define REG_HS_PIX_START_MSB REG(0x00, 0xb9) /* write */
+#define REG_HS_PIX_START_LSB REG(0x00, 0xba) /* write */
+#define REG_HS_PIX_STOP_MSB REG(0x00, 0xbb) /* write */
+#define REG_HS_PIX_STOP_LSB REG(0x00, 0xbc) /* write */
+#define REG_VWIN_START_1_MSB REG(0x00, 0xbd) /* write */
+#define REG_VWIN_START_1_LSB REG(0x00, 0xbe) /* write */
+#define REG_VWIN_END_1_MSB REG(0x00, 0xbf) /* write */
+#define REG_VWIN_END_1_LSB REG(0x00, 0xc0) /* write */
+#define REG_VWIN_START_2_MSB REG(0x00, 0xc1) /* write */
+#define REG_VWIN_START_2_LSB REG(0x00, 0xc2) /* write */
+#define REG_VWIN_END_2_MSB REG(0x00, 0xc3) /* write */
+#define REG_VWIN_END_2_LSB REG(0x00, 0xc4) /* write */
+#define REG_DE_START_MSB REG(0x00, 0xc5) /* write */
+#define REG_DE_START_LSB REG(0x00, 0xc6) /* write */
+#define REG_DE_STOP_MSB REG(0x00, 0xc7) /* write */
+#define REG_DE_STOP_LSB REG(0x00, 0xc8) /* write */
+#define REG_TBG_CNTRL_0 REG(0x00, 0xca) /* write */
+#define TBG_CNTRL_0_TOP_TGL (1 << 0)
+#define TBG_CNTRL_0_TOP_SEL (1 << 1)
+#define TBG_CNTRL_0_DE_EXT (1 << 2)
+#define TBG_CNTRL_0_TOP_EXT (1 << 3)
+#define TBG_CNTRL_0_FRAME_DIS (1 << 5)
+#define TBG_CNTRL_0_SYNC_MTHD (1 << 6)
+#define TBG_CNTRL_0_SYNC_ONCE (1 << 7)
+#define REG_TBG_CNTRL_1 REG(0x00, 0xcb) /* write */
+#define TBG_CNTRL_1_H_TGL (1 << 0)
+#define TBG_CNTRL_1_V_TGL (1 << 1)
+#define TBG_CNTRL_1_TGL_EN (1 << 2)
+#define TBG_CNTRL_1_X_EXT (1 << 3)
+#define TBG_CNTRL_1_H_EXT (1 << 4)
+#define TBG_CNTRL_1_V_EXT (1 << 5)
+#define TBG_CNTRL_1_DWIN_DIS (1 << 6)
+#define REG_ENABLE_SPACE REG(0x00, 0xd6) /* write */
+#define REG_HVF_CNTRL_0 REG(0x00, 0xe4) /* write */
+#define HVF_CNTRL_0_SM (1 << 7)
+#define HVF_CNTRL_0_RWB (1 << 6)
+#define HVF_CNTRL_0_PREFIL(x) (((x)&3) << 2)
+#define HVF_CNTRL_0_INTPOL(x) (((x)&3) << 0)
+#define REG_HVF_CNTRL_1 REG(0x00, 0xe5) /* write */
+#define HVF_CNTRL_1_FOR (1 << 0)
+#define HVF_CNTRL_1_YUVBLK (1 << 1)
+#define HVF_CNTRL_1_VQR(x) (((x)&3) << 2)
+#define HVF_CNTRL_1_PAD(x) (((x)&3) << 4)
+#define HVF_CNTRL_1_SEMI_PLANAR (1 << 6)
+#define REG_RPT_CNTRL REG(0x00, 0xf0) /* write */
+#define REG_I2S_FORMAT REG(0x00, 0xfc) /* read/write */
+#define I2S_FORMAT(x) (((x)&3) << 0)
+#define REG_AIP_CLKSEL REG(0x00, 0xfd) /* write */
+#define AIP_CLKSEL_AIP_SPDIF (0 << 3)
+#define AIP_CLKSEL_AIP_I2S (1 << 3)
+#define AIP_CLKSEL_FS_ACLK (0 << 0)
+#define AIP_CLKSEL_FS_MCLK (1 << 0)
+#define AIP_CLKSEL_FS_FS64SPDIF (2 << 0)
 
 /* Page 02h: PLL settings */
-#define REG_PLL_SERIAL_1          REG(0x02, 0x00)     /* read/write */
-# define PLL_SERIAL_1_SRL_FDN     (1 << 0)
-# define PLL_SERIAL_1_SRL_IZ(x)   (((x) & 3) << 1)
-# define PLL_SERIAL_1_SRL_MAN_IZ  (1 << 6)
-#define REG_PLL_SERIAL_2          REG(0x02, 0x01)     /* read/write */
-# define PLL_SERIAL_2_SRL_NOSC(x) ((x) << 0)
-# define PLL_SERIAL_2_SRL_PR(x)   (((x) & 0xf) << 4)
-#define REG_PLL_SERIAL_3          REG(0x02, 0x02)     /* read/write */
-# define PLL_SERIAL_3_SRL_CCIR    (1 << 0)
-# define PLL_SERIAL_3_SRL_DE      (1 << 2)
-# define PLL_SERIAL_3_SRL_PXIN_SEL (1 << 4)
-#define REG_SERIALIZER            REG(0x02, 0x03)     /* read/write */
-#define REG_BUFFER_OUT            REG(0x02, 0x04)     /* read/write */
-#define REG_PLL_SCG1              REG(0x02, 0x05)     /* read/write */
-#define REG_PLL_SCG2              REG(0x02, 0x06)     /* read/write */
-#define REG_PLL_SCGN1             REG(0x02, 0x07)     /* read/write */
-#define REG_PLL_SCGN2             REG(0x02, 0x08)     /* read/write */
-#define REG_PLL_SCGR1             REG(0x02, 0x09)     /* read/write */
-#define REG_PLL_SCGR2             REG(0x02, 0x0a)     /* read/write */
-#define REG_AUDIO_DIV             REG(0x02, 0x0e)     /* read/write */
-# define AUDIO_DIV_SERCLK_1       0
-# define AUDIO_DIV_SERCLK_2       1
-# define AUDIO_DIV_SERCLK_4       2
-# define AUDIO_DIV_SERCLK_8       3
-# define AUDIO_DIV_SERCLK_16      4
-# define AUDIO_DIV_SERCLK_32      5
-#define REG_SEL_CLK               REG(0x02, 0x11)     /* read/write */
-# define SEL_CLK_SEL_CLK1         (1 << 0)
-# define SEL_CLK_SEL_VRF_CLK(x)   (((x) & 3) << 1)
-# define SEL_CLK_ENA_SC_CLK       (1 << 3)
-#define REG_ANA_GENERAL           REG(0x02, 0x12)     /* read/write */
-
+#define REG_PLL_SERIAL_1 REG(0x02, 0x00) /* read/write */
+#define PLL_SERIAL_1_SRL_FDN (1 << 0)
+#define PLL_SERIAL_1_SRL_IZ(x) (((x)&3) << 1)
+#define PLL_SERIAL_1_SRL_MAN_IZ (1 << 6)
+#define REG_PLL_SERIAL_2 REG(0x02, 0x01) /* read/write */
+#define PLL_SERIAL_2_SRL_NOSC(x) ((x) << 0)
+#define PLL_SERIAL_2_SRL_PR(x) (((x)&0xf) << 4)
+#define REG_PLL_SERIAL_3 REG(0x02, 0x02) /* read/write */
+#define PLL_SERIAL_3_SRL_CCIR (1 << 0)
+#define PLL_SERIAL_3_SRL_DE (1 << 2)
+#define PLL_SERIAL_3_SRL_PXIN_SEL (1 << 4)
+#define REG_SERIALIZER REG(0x02, 0x03) /* read/write */
+#define REG_BUFFER_OUT REG(0x02, 0x04) /* read/write */
+#define REG_PLL_SCG1 REG(0x02, 0x05) /* read/write */
+#define REG_PLL_SCG2 REG(0x02, 0x06) /* read/write */
+#define REG_PLL_SCGN1 REG(0x02, 0x07) /* read/write */
+#define REG_PLL_SCGN2 REG(0x02, 0x08) /* read/write */
+#define REG_PLL_SCGR1 REG(0x02, 0x09) /* read/write */
+#define REG_PLL_SCGR2 REG(0x02, 0x0a) /* read/write */
+#define REG_AUDIO_DIV REG(0x02, 0x0e) /* read/write */
+#define AUDIO_DIV_SERCLK_1 0
+#define AUDIO_DIV_SERCLK_2 1
+#define AUDIO_DIV_SERCLK_4 2
+#define AUDIO_DIV_SERCLK_8 3
+#define AUDIO_DIV_SERCLK_16 4
+#define AUDIO_DIV_SERCLK_32 5
+#define REG_SEL_CLK REG(0x02, 0x11) /* read/write */
+#define SEL_CLK_SEL_CLK1 (1 << 0)
+#define SEL_CLK_SEL_VRF_CLK(x) (((x)&3) << 1)
+#define SEL_CLK_ENA_SC_CLK (1 << 3)
+#define REG_ANA_GENERAL REG(0x02, 0x12) /* read/write */
 
 /* Page 09h: EDID Control */
-#define REG_EDID_DATA_0           REG(0x09, 0x00)     /* read */
+#define REG_EDID_DATA_0 REG(0x09, 0x00) /* read */
 /* next 127 successive registers are the EDID block */
-#define REG_EDID_CTRL             REG(0x09, 0xfa)     /* read/write */
-#define REG_DDC_ADDR              REG(0x09, 0xfb)     /* read/write */
-#define REG_DDC_OFFS              REG(0x09, 0xfc)     /* read/write */
-#define REG_DDC_SEGM_ADDR         REG(0x09, 0xfd)     /* read/write */
-#define REG_DDC_SEGM              REG(0x09, 0xfe)     /* read/write */
-
+#define REG_EDID_CTRL REG(0x09, 0xfa) /* read/write */
+#define REG_DDC_ADDR REG(0x09, 0xfb) /* read/write */
+#define REG_DDC_OFFS REG(0x09, 0xfc) /* read/write */
+#define REG_DDC_SEGM_ADDR REG(0x09, 0xfd) /* read/write */
+#define REG_DDC_SEGM REG(0x09, 0xfe) /* read/write */
 
 /* Page 10h: information frames and packets */
-#define REG_IF1_HB0               REG(0x10, 0x20)     /* read/write */
-#define REG_IF2_HB0               REG(0x10, 0x40)     /* read/write */
-#define REG_IF3_HB0               REG(0x10, 0x60)     /* read/write */
-#define REG_IF4_HB0               REG(0x10, 0x80)     /* read/write */
-#define REG_IF5_HB0               REG(0x10, 0xa0)     /* read/write */
-
+#define REG_IF1_HB0 REG(0x10, 0x20) /* read/write */
+#define REG_IF2_HB0 REG(0x10, 0x40) /* read/write */
+#define REG_IF3_HB0 REG(0x10, 0x60) /* read/write */
+#define REG_IF4_HB0 REG(0x10, 0x80) /* read/write */
+#define REG_IF5_HB0 REG(0x10, 0xa0) /* read/write */
 
 /* Page 11h: audio settings and content info packets */
-#define REG_AIP_CNTRL_0           REG(0x11, 0x00)     /* read/write */
-# define AIP_CNTRL_0_RST_FIFO     (1 << 0)
-# define AIP_CNTRL_0_SWAP         (1 << 1)
-# define AIP_CNTRL_0_LAYOUT       (1 << 2)
-# define AIP_CNTRL_0_ACR_MAN      (1 << 5)
-# define AIP_CNTRL_0_RST_CTS      (1 << 6)
-#define REG_CA_I2S                REG(0x11, 0x01)     /* read/write */
-# define CA_I2S_CA_I2S(x)         (((x) & 31) << 0)
-# define CA_I2S_HBR_CHSTAT        (1 << 6)
-#define REG_LATENCY_RD            REG(0x11, 0x04)     /* read/write */
-#define REG_ACR_CTS_0             REG(0x11, 0x05)     /* read/write */
-#define REG_ACR_CTS_1             REG(0x11, 0x06)     /* read/write */
-#define REG_ACR_CTS_2             REG(0x11, 0x07)     /* read/write */
-#define REG_ACR_N_0               REG(0x11, 0x08)     /* read/write */
-#define REG_ACR_N_1               REG(0x11, 0x09)     /* read/write */
-#define REG_ACR_N_2               REG(0x11, 0x0a)     /* read/write */
-#define REG_CTS_N                 REG(0x11, 0x0c)     /* read/write */
-# define CTS_N_K(x)               (((x) & 7) << 0)
-# define CTS_N_M(x)               (((x) & 3) << 4)
-#define REG_ENC_CNTRL             REG(0x11, 0x0d)     /* read/write */
-# define ENC_CNTRL_RST_ENC        (1 << 0)
-# define ENC_CNTRL_RST_SEL        (1 << 1)
-# define ENC_CNTRL_CTL_CODE(x)    (((x) & 3) << 2)
-#define REG_DIP_FLAGS             REG(0x11, 0x0e)     /* read/write */
-# define DIP_FLAGS_ACR            (1 << 0)
-# define DIP_FLAGS_GC             (1 << 1)
-#define REG_DIP_IF_FLAGS          REG(0x11, 0x0f)     /* read/write */
-# define DIP_IF_FLAGS_IF1         (1 << 1)
-# define DIP_IF_FLAGS_IF2         (1 << 2)
-# define DIP_IF_FLAGS_IF3         (1 << 3)
-# define DIP_IF_FLAGS_IF4         (1 << 4)
-# define DIP_IF_FLAGS_IF5         (1 << 5)
-#define REG_CH_STAT_B(x)          REG(0x11, 0x14 + (x)) /* read/write */
-
+#define REG_AIP_CNTRL_0 REG(0x11, 0x00) /* read/write */
+#define AIP_CNTRL_0_RST_FIFO (1 << 0)
+#define AIP_CNTRL_0_SWAP (1 << 1)
+#define AIP_CNTRL_0_LAYOUT (1 << 2)
+#define AIP_CNTRL_0_ACR_MAN (1 << 5)
+#define AIP_CNTRL_0_RST_CTS (1 << 6)
+#define REG_CA_I2S REG(0x11, 0x01) /* read/write */
+#define CA_I2S_CA_I2S(x) (((x)&31) << 0)
+#define CA_I2S_HBR_CHSTAT (1 << 6)
+#define REG_LATENCY_RD REG(0x11, 0x04) /* read/write */
+#define REG_ACR_CTS_0 REG(0x11, 0x05) /* read/write */
+#define REG_ACR_CTS_1 REG(0x11, 0x06) /* read/write */
+#define REG_ACR_CTS_2 REG(0x11, 0x07) /* read/write */
+#define REG_ACR_N_0 REG(0x11, 0x08) /* read/write */
+#define REG_ACR_N_1 REG(0x11, 0x09) /* read/write */
+#define REG_ACR_N_2 REG(0x11, 0x0a) /* read/write */
+#define REG_CTS_N REG(0x11, 0x0c) /* read/write */
+#define CTS_N_K(x) (((x)&7) << 0)
+#define CTS_N_M(x) (((x)&3) << 4)
+#define REG_ENC_CNTRL REG(0x11, 0x0d) /* read/write */
+#define ENC_CNTRL_RST_ENC (1 << 0)
+#define ENC_CNTRL_RST_SEL (1 << 1)
+#define ENC_CNTRL_CTL_CODE(x) (((x)&3) << 2)
+#define REG_DIP_FLAGS REG(0x11, 0x0e) /* read/write */
+#define DIP_FLAGS_ACR (1 << 0)
+#define DIP_FLAGS_GC (1 << 1)
+#define REG_DIP_IF_FLAGS REG(0x11, 0x0f) /* read/write */
+#define DIP_IF_FLAGS_IF1 (1 << 1)
+#define DIP_IF_FLAGS_IF2 (1 << 2)
+#define DIP_IF_FLAGS_IF3 (1 << 3)
+#define DIP_IF_FLAGS_IF4 (1 << 4)
+#define DIP_IF_FLAGS_IF5 (1 << 5)
+#define REG_CH_STAT_B(x) REG(0x11, 0x14 + (x)) /* read/write */
 
 /* Page 12h: HDCP and OTP */
-#define REG_TX3                   REG(0x12, 0x9a)     /* read/write */
-#define REG_TX4                   REG(0x12, 0x9b)     /* read/write */
-# define TX4_PD_RAM               (1 << 1)
-#define REG_TX33                  REG(0x12, 0xb8)     /* read/write */
-# define TX33_HDMI                (1 << 1)
-
+#define REG_TX3 REG(0x12, 0x9a) /* read/write */
+#define REG_TX4 REG(0x12, 0x9b) /* read/write */
+#define TX4_PD_RAM (1 << 1)
+#define REG_TX33 REG(0x12, 0xb8) /* read/write */
+#define TX33_HDMI (1 << 1)
 
 /* Page 13h: Gamut related metadata packets */
 
-
-
 /* CEC registers: (not paged)
  */
-#define REG_CEC_INTSTATUS	  0xee		      /* read */
-# define CEC_INTSTATUS_CEC	  (1 << 0)
-# define CEC_INTSTATUS_HDMI	  (1 << 1)
-#define REG_CEC_CAL_XOSC_CTRL1    0xf2
-# define CEC_CAL_XOSC_CTRL1_ENA_CAL	BIT(0)
-#define REG_CEC_DES_FREQ2         0xf5
-# define CEC_DES_FREQ2_DIS_AUTOCAL BIT(7)
-#define REG_CEC_CLK               0xf6
-# define CEC_CLK_FRO              0x11
-#define REG_CEC_FRO_IM_CLK_CTRL   0xfb                /* read/write */
-# define CEC_FRO_IM_CLK_CTRL_GHOST_DIS (1 << 7)
-# define CEC_FRO_IM_CLK_CTRL_ENA_OTP   (1 << 6)
-# define CEC_FRO_IM_CLK_CTRL_IMCLK_SEL (1 << 1)
-# define CEC_FRO_IM_CLK_CTRL_FRO_DIV   (1 << 0)
-#define REG_CEC_RXSHPDINTENA	  0xfc		      /* read/write */
-#define REG_CEC_RXSHPDINT	  0xfd		      /* read */
-# define CEC_RXSHPDINT_RXSENS     BIT(0)
-# define CEC_RXSHPDINT_HPD        BIT(1)
-#define REG_CEC_RXSHPDLEV         0xfe                /* read */
-# define CEC_RXSHPDLEV_RXSENS     (1 << 0)
-# define CEC_RXSHPDLEV_HPD        (1 << 1)
+#define REG_CEC_INTSTATUS 0xee /* read */
+#define CEC_INTSTATUS_CEC (1 << 0)
+#define CEC_INTSTATUS_HDMI (1 << 1)
+#define REG_CEC_CAL_XOSC_CTRL1 0xf2
+#define CEC_CAL_XOSC_CTRL1_ENA_CAL BIT(0)
+#define REG_CEC_DES_FREQ2 0xf5
+#define CEC_DES_FREQ2_DIS_AUTOCAL BIT(7)
+#define REG_CEC_CLK 0xf6
+#define CEC_CLK_FRO 0x11
+#define REG_CEC_FRO_IM_CLK_CTRL 0xfb /* read/write */
+#define CEC_FRO_IM_CLK_CTRL_GHOST_DIS (1 << 7)
+#define CEC_FRO_IM_CLK_CTRL_ENA_OTP (1 << 6)
+#define CEC_FRO_IM_CLK_CTRL_IMCLK_SEL (1 << 1)
+#define CEC_FRO_IM_CLK_CTRL_FRO_DIV (1 << 0)
+#define REG_CEC_RXSHPDINTENA 0xfc /* read/write */
+#define REG_CEC_RXSHPDINT 0xfd /* read */
+#define CEC_RXSHPDINT_RXSENS BIT(0)
+#define CEC_RXSHPDINT_HPD BIT(1)
+#define REG_CEC_RXSHPDLEV 0xfe /* read */
+#define CEC_RXSHPDLEV_RXSENS (1 << 0)
+#define CEC_RXSHPDLEV_HPD (1 << 1)
 
-#define REG_CEC_ENAMODS           0xff                /* read/write */
-# define CEC_ENAMODS_EN_CEC_CLK   (1 << 7)
-# define CEC_ENAMODS_DIS_FRO      (1 << 6)
-# define CEC_ENAMODS_DIS_CCLK     (1 << 5)
-# define CEC_ENAMODS_EN_RXSENS    (1 << 2)
-# define CEC_ENAMODS_EN_HDMI      (1 << 1)
-# define CEC_ENAMODS_EN_CEC       (1 << 0)
-
+#define REG_CEC_ENAMODS 0xff /* read/write */
+#define CEC_ENAMODS_EN_CEC_CLK (1 << 7)
+#define CEC_ENAMODS_DIS_FRO (1 << 6)
+#define CEC_ENAMODS_DIS_CCLK (1 << 5)
+#define CEC_ENAMODS_EN_RXSENS (1 << 2)
+#define CEC_ENAMODS_EN_HDMI (1 << 1)
+#define CEC_ENAMODS_EN_CEC (1 << 0)
 
 /* Device versions: */
-#define TDA9989N2                 0x0101
-#define TDA19989                  0x0201
-#define TDA19989N2                0x0202
-#define TDA19988                  0x0301
+#define TDA9989N2 0x0101
+#define TDA19989 0x0201
+#define TDA19989N2 0x0202
+#define TDA19988 0x0301
 
-static void
-cec_write(struct tda998x_priv *priv, u16 addr, u8 val)
+static void cec_write(struct tda998x_priv *priv, u16 addr, u8 val)
 {
-	u8 buf[] = {addr, val};
+	u8 buf[] = { addr, val };
 	struct i2c_msg msg = {
 		.addr = priv->cec_addr,
 		.len = 2,
@@ -402,12 +389,11 @@ cec_write(struct tda998x_priv *priv, u16 addr, u8 val)
 
 	ret = i2c_transfer(priv->hdmi->adapter, &msg, 1);
 	if (ret < 0)
-		dev_err(&priv->hdmi->dev, "Error %d writing to cec:0x%x\n",
-			ret, addr);
+		dev_err(&priv->hdmi->dev, "Error %d writing to cec:0x%x\n", ret,
+			addr);
 }
 
-static u8
-cec_read(struct tda998x_priv *priv, u8 addr)
+static u8 cec_read(struct tda998x_priv *priv, u8 addr)
 {
 	u8 val;
 	struct i2c_msg msg[2] = {
@@ -415,7 +401,8 @@ cec_read(struct tda998x_priv *priv, u8 addr)
 			.addr = priv->cec_addr,
 			.len = 1,
 			.buf = &addr,
-		}, {
+		},
+		{
 			.addr = priv->cec_addr,
 			.flags = I2C_M_RD,
 			.len = 1,
@@ -507,7 +494,8 @@ static int tda998x_cec_hook_init(void *data)
 
 	calib = gpiod_get(&priv->hdmi->dev, "nxp,calib", GPIOD_ASIS);
 	if (IS_ERR(calib)) {
-		dev_warn(&priv->hdmi->dev, "failed to get calibration gpio: %ld\n",
+		dev_warn(&priv->hdmi->dev,
+			 "failed to get calibration gpio: %ld\n",
 			 PTR_ERR(calib));
 		return PTR_ERR(calib);
 	}
@@ -542,18 +530,15 @@ static void tda998x_cec_hook_release(void *data)
 	cec_enamods(priv, CEC_ENAMODS_EN_CEC_CLK | CEC_ENAMODS_EN_CEC, false);
 }
 
-static int
-set_page(struct tda998x_priv *priv, u16 reg)
+static int set_page(struct tda998x_priv *priv, u16 reg)
 {
 	if (REG2PAGE(reg) != priv->current_page) {
 		struct i2c_client *client = priv->hdmi;
-		u8 buf[] = {
-				REG_CURPAGE, REG2PAGE(reg)
-		};
+		u8 buf[] = { REG_CURPAGE, REG2PAGE(reg) };
 		int ret = i2c_master_send(client, buf, sizeof(buf));
 		if (ret < 0) {
-			dev_err(&client->dev, "%s %04x err %d\n", __func__,
-					reg, ret);
+			dev_err(&client->dev, "%s %04x err %d\n", __func__, reg,
+				ret);
 			return ret;
 		}
 
@@ -562,8 +547,8 @@ set_page(struct tda998x_priv *priv, u16 reg)
 	return 0;
 }
 
-static int
-reg_read_range(struct tda998x_priv *priv, u16 reg, char *buf, int cnt)
+static int reg_read_range(struct tda998x_priv *priv, u16 reg, char *buf,
+			  int cnt)
 {
 	struct i2c_client *client = priv->hdmi;
 	u8 addr = REG2ADDR(reg);
@@ -593,8 +578,7 @@ out:
 
 #define MAX_WRITE_RANGE_BUF 32
 
-static void
-reg_write_range(struct tda998x_priv *priv, u16 reg, u8 *p, int cnt)
+static void reg_write_range(struct tda998x_priv *priv, u16 reg, u8 *p, int cnt)
 {
 	struct i2c_client *client = priv->hdmi;
 	/* This is the maximum size of the buffer passed in */
@@ -603,7 +587,7 @@ reg_write_range(struct tda998x_priv *priv, u16 reg, u8 *p, int cnt)
 
 	if (cnt > MAX_WRITE_RANGE_BUF) {
 		dev_err(&client->dev, "Fixed write buffer too small (%d)\n",
-				MAX_WRITE_RANGE_BUF);
+			MAX_WRITE_RANGE_BUF);
 		return;
 	}
 
@@ -622,8 +606,7 @@ out:
 	mutex_unlock(&priv->mutex);
 }
 
-static int
-reg_read(struct tda998x_priv *priv, u16 reg)
+static int reg_read(struct tda998x_priv *priv, u16 reg)
 {
 	u8 val = 0;
 	int ret;
@@ -634,11 +617,10 @@ reg_read(struct tda998x_priv *priv, u16 reg)
 	return val;
 }
 
-static void
-reg_write(struct tda998x_priv *priv, u16 reg, u8 val)
+static void reg_write(struct tda998x_priv *priv, u16 reg, u8 val)
 {
 	struct i2c_client *client = priv->hdmi;
-	u8 buf[] = {REG2ADDR(reg), val};
+	u8 buf[] = { REG2ADDR(reg), val };
 	int ret;
 
 	mutex_lock(&priv->mutex);
@@ -653,11 +635,10 @@ out:
 	mutex_unlock(&priv->mutex);
 }
 
-static void
-reg_write16(struct tda998x_priv *priv, u16 reg, u16 val)
+static void reg_write16(struct tda998x_priv *priv, u16 reg, u16 val)
 {
 	struct i2c_client *client = priv->hdmi;
-	u8 buf[] = {REG2ADDR(reg), val >> 8, val};
+	u8 buf[] = { REG2ADDR(reg), val >> 8, val };
 	int ret;
 
 	mutex_lock(&priv->mutex);
@@ -672,8 +653,7 @@ out:
 	mutex_unlock(&priv->mutex);
 }
 
-static void
-reg_set(struct tda998x_priv *priv, u16 reg, u8 val)
+static void reg_set(struct tda998x_priv *priv, u16 reg, u8 val)
 {
 	int old_val;
 
@@ -682,8 +662,7 @@ reg_set(struct tda998x_priv *priv, u16 reg, u8 val)
 		reg_write(priv, reg, old_val | val);
 }
 
-static void
-reg_clear(struct tda998x_priv *priv, u16 reg, u8 val)
+static void reg_clear(struct tda998x_priv *priv, u16 reg, u8 val)
 {
 	int old_val;
 
@@ -692,8 +671,7 @@ reg_clear(struct tda998x_priv *priv, u16 reg, u8 val)
 		reg_write(priv, reg, old_val & ~val);
 }
 
-static void
-tda998x_reset(struct tda998x_priv *priv)
+static void tda998x_reset(struct tda998x_priv *priv)
 {
 	/* reset audio and i2c master: */
 	reg_write(priv, REG_SOFTRESET, SOFTRESET_AUDIO | SOFTRESET_I2C_MASTER);
@@ -709,16 +687,16 @@ tda998x_reset(struct tda998x_priv *priv)
 	reg_write(priv, REG_PLL_SERIAL_1, 0x00);
 	reg_write(priv, REG_PLL_SERIAL_2, PLL_SERIAL_2_SRL_NOSC(1));
 	reg_write(priv, REG_PLL_SERIAL_3, 0x00);
-	reg_write(priv, REG_SERIALIZER,   0x00);
-	reg_write(priv, REG_BUFFER_OUT,   0x00);
-	reg_write(priv, REG_PLL_SCG1,     0x00);
-	reg_write(priv, REG_AUDIO_DIV,    AUDIO_DIV_SERCLK_8);
-	reg_write(priv, REG_SEL_CLK,      SEL_CLK_SEL_CLK1 | SEL_CLK_ENA_SC_CLK);
-	reg_write(priv, REG_PLL_SCGN1,    0xfa);
-	reg_write(priv, REG_PLL_SCGN2,    0x00);
-	reg_write(priv, REG_PLL_SCGR1,    0x5b);
-	reg_write(priv, REG_PLL_SCGR2,    0x00);
-	reg_write(priv, REG_PLL_SCG2,     0x10);
+	reg_write(priv, REG_SERIALIZER, 0x00);
+	reg_write(priv, REG_BUFFER_OUT, 0x00);
+	reg_write(priv, REG_PLL_SCG1, 0x00);
+	reg_write(priv, REG_AUDIO_DIV, AUDIO_DIV_SERCLK_8);
+	reg_write(priv, REG_SEL_CLK, SEL_CLK_SEL_CLK1 | SEL_CLK_ENA_SC_CLK);
+	reg_write(priv, REG_PLL_SCGN1, 0xfa);
+	reg_write(priv, REG_PLL_SCGN2, 0x00);
+	reg_write(priv, REG_PLL_SCGR1, 0x5b);
+	reg_write(priv, REG_PLL_SCGR2, 0x00);
+	reg_write(priv, REG_PLL_SCG2, 0x10);
 
 	/* Write the default value MUX register */
 	reg_write(priv, REG_MUX_VP_VIP_OUT, 0x24);
@@ -747,12 +725,13 @@ static void tda998x_edid_delay_done(struct timer_list *t)
 static void tda998x_edid_delay_start(struct tda998x_priv *priv)
 {
 	priv->edid_delay_active = true;
-	mod_timer(&priv->edid_delay_timer, jiffies + HZ/10);
+	mod_timer(&priv->edid_delay_timer, jiffies + HZ / 10);
 }
 
 static int tda998x_edid_delay_wait(struct tda998x_priv *priv)
 {
-	return wait_event_killable(priv->edid_delay_waitq, !priv->edid_delay_active);
+	return wait_event_killable(priv->edid_delay_waitq,
+				   !priv->edid_delay_active);
 }
 
 /*
@@ -795,8 +774,9 @@ static irqreturn_t tda998x_irq_thread(int irq, void *data)
 				tda998x_edid_delay_start(priv);
 			} else {
 				schedule_work(&priv->detect_work);
-				cec_notifier_set_phys_addr(priv->cec_notify,
-						   CEC_PHYS_ADDR_INVALID);
+				cec_notifier_set_phys_addr(
+					priv->cec_notify,
+					CEC_PHYS_ADDR_INVALID);
 			}
 
 			handled = true;
@@ -812,9 +792,8 @@ static irqreturn_t tda998x_irq_thread(int irq, void *data)
 	return IRQ_RETVAL(handled);
 }
 
-static void
-tda998x_write_if(struct tda998x_priv *priv, u8 bit, u16 addr,
-		 union hdmi_infoframe *frame)
+static void tda998x_write_if(struct tda998x_priv *priv, u8 bit, u16 addr,
+			     union hdmi_infoframe *frame)
 {
 	u8 buf[MAX_WRITE_RANGE_BUF];
 	ssize_t len;
@@ -844,13 +823,13 @@ static int tda998x_write_aif(struct tda998x_priv *priv,
 	return 0;
 }
 
-static void
-tda998x_write_avi(struct tda998x_priv *priv, const struct drm_display_mode *mode)
+static void tda998x_write_avi(struct tda998x_priv *priv,
+			      const struct drm_display_mode *mode)
 {
 	union hdmi_infoframe frame;
 
-	drm_hdmi_avi_infoframe_from_display_mode(&frame.avi,
-						 &priv->connector, mode);
+	drm_hdmi_avi_infoframe_from_display_mode(&frame.avi, &priv->connector,
+						 mode);
 	frame.avi.quantization_range = HDMI_QUANTIZATION_RANGE_FULL;
 
 	tda998x_write_if(priv, DIP_IF_FLAGS_IF2, REG_IF2_HB0, &frame);
@@ -869,9 +848,8 @@ static void tda998x_audio_mute(struct tda998x_priv *priv, bool on)
 	}
 }
 
-static int
-tda998x_configure_audio(struct tda998x_priv *priv,
-			struct tda998x_audio_params *params)
+static int tda998x_configure_audio(struct tda998x_priv *priv,
+				   struct tda998x_audio_params *params)
 {
 	u8 buf[6], clksel_aip, clksel_fs, cts_n, adiv;
 	u32 n;
@@ -916,8 +894,8 @@ tda998x_configure_audio(struct tda998x_priv *priv,
 	}
 
 	reg_write(priv, REG_AIP_CLKSEL, clksel_aip);
-	reg_clear(priv, REG_AIP_CNTRL_0, AIP_CNTRL_0_LAYOUT |
-					AIP_CNTRL_0_ACR_MAN);	/* auto CTS */
+	reg_clear(priv, REG_AIP_CNTRL_0,
+		  AIP_CNTRL_0_LAYOUT | AIP_CNTRL_0_ACR_MAN); /* auto CTS */
 	reg_write(priv, REG_CTS_N, cts_n);
 
 	/*
@@ -929,11 +907,11 @@ tda998x_configure_audio(struct tda998x_priv *priv,
 	 */
 	adiv = AUDIO_DIV_SERCLK_8;
 	if (priv->tmds_clock > 100000)
-		adiv++;			/* AUDIO_DIV_SERCLK_16 */
+		adiv++; /* AUDIO_DIV_SERCLK_16 */
 
 	/* S/PDIF asks for a larger divider */
 	if (params->format == AFMT_SPDIF)
-		adiv++;			/* AUDIO_DIV_SERCLK_16 or _32 */
+		adiv++; /* AUDIO_DIV_SERCLK_16 or _32 */
 
 	reg_write(priv, REG_AUDIO_DIV, adiv);
 
@@ -1060,14 +1038,13 @@ int tda998x_audio_digital_mute(struct device *dev, void *data, bool enable)
 	return 0;
 }
 
-static int tda998x_audio_get_eld(struct device *dev, void *data,
-				 uint8_t *buf, size_t len)
+static int tda998x_audio_get_eld(struct device *dev, void *data, uint8_t *buf,
+				 size_t len)
 {
 	struct tda998x_priv *priv = dev_get_drvdata(dev);
 
 	mutex_lock(&priv->audio_mutex);
-	memcpy(buf, priv->connector.eld,
-	       min(sizeof(priv->connector.eld), len));
+	memcpy(buf, priv->connector.eld, min(sizeof(priv->connector.eld), len));
 	mutex_unlock(&priv->audio_mutex);
 
 	return 0;
@@ -1098,9 +1075,10 @@ static int tda998x_audio_codec_init(struct tda998x_priv *priv,
 			codec_data.spdif = 1;
 	}
 
-	priv->audio_pdev = platform_device_register_data(
-		dev, HDMI_CODEC_DRV_NAME, PLATFORM_DEVID_AUTO,
-		&codec_data, sizeof(codec_data));
+	priv->audio_pdev =
+		platform_device_register_data(dev, HDMI_CODEC_DRV_NAME,
+					      PLATFORM_DEVID_AUTO, &codec_data,
+					      sizeof(codec_data));
 
 	return PTR_ERR_OR_ZERO(priv->audio_pdev);
 }
@@ -1114,7 +1092,7 @@ tda998x_connector_detect(struct drm_connector *connector, bool force)
 	u8 val = cec_read(priv, REG_CEC_RXSHPDLEV);
 
 	return (val & CEC_RXSHPDLEV_HPD) ? connector_status_connected :
-			connector_status_disconnected;
+					   connector_status_disconnected;
 }
 
 static void tda998x_connector_destroy(struct drm_connector *connector)
@@ -1156,9 +1134,8 @@ static int read_edid_block(void *data, u8 *buf, unsigned int blk, size_t length)
 
 	/* wait for block read to complete: */
 	if (priv->hdmi->irq) {
-		i = wait_event_timeout(priv->wq_edid,
-					!priv->wq_edid_wait,
-					msecs_to_jiffies(100));
+		i = wait_event_timeout(priv->wq_edid, !priv->wq_edid_wait,
+				       msecs_to_jiffies(100));
 		if (i < 0) {
 			dev_err(&priv->hdmi->dev, "read edid wait err %d\n", i);
 			ret = i;
@@ -1190,7 +1167,7 @@ static int read_edid_block(void *data, u8 *buf, unsigned int blk, size_t length)
 
 	ret = 0;
 
- failed:
+failed:
 	mutex_unlock(&priv->edid_mutex);
 	return ret;
 }
@@ -1243,8 +1220,7 @@ tda998x_connector_best_encoder(struct drm_connector *connector)
 	return priv->bridge.encoder;
 }
 
-static
-const struct drm_connector_helper_funcs tda998x_connector_helper_funcs = {
+static const struct drm_connector_helper_funcs tda998x_connector_helper_funcs = {
 	.get_modes = tda998x_connector_get_modes,
 	.best_encoder = tda998x_connector_best_encoder,
 };
@@ -1261,7 +1237,7 @@ static int tda998x_connector_init(struct tda998x_priv *priv,
 		connector->polled = DRM_CONNECTOR_POLL_HPD;
 	else
 		connector->polled = DRM_CONNECTOR_POLL_CONNECT |
-			DRM_CONNECTOR_POLL_DISCONNECT;
+				    DRM_CONNECTOR_POLL_DISCONNECT;
 
 	drm_connector_helper_add(connector, &tda998x_connector_helper_funcs);
 	ret = drm_connector_init(drm, connector, &tda998x_connector_funcs,
@@ -1269,8 +1245,7 @@ static int tda998x_connector_init(struct tda998x_priv *priv,
 	if (ret)
 		return ret;
 
-	drm_connector_attach_encoder(&priv->connector,
-				     priv->bridge.encoder);
+	drm_connector_attach_encoder(&priv->connector, priv->bridge.encoder);
 
 	return 0;
 }
@@ -1291,8 +1266,9 @@ static void tda998x_bridge_detach(struct drm_bridge *bridge)
 	drm_connector_cleanup(&priv->connector);
 }
 
-static enum drm_mode_status tda998x_bridge_mode_valid(struct drm_bridge *bridge,
-				     const struct drm_display_mode *mode)
+static enum drm_mode_status
+tda998x_bridge_mode_valid(struct drm_bridge *bridge,
+			  const struct drm_display_mode *mode)
 {
 	/* TDA19988 dotclock can go up to 165MHz */
 	struct tda998x_priv *priv = bridge_to_tda998x_priv(bridge);
@@ -1338,9 +1314,10 @@ static void tda998x_bridge_disable(struct drm_bridge *bridge)
 	}
 }
 
-static void tda998x_bridge_mode_set(struct drm_bridge *bridge,
-				    const struct drm_display_mode *mode,
-				    const struct drm_display_mode *adjusted_mode)
+static void
+tda998x_bridge_mode_set(struct drm_bridge *bridge,
+			const struct drm_display_mode *mode,
+			const struct drm_display_mode *adjusted_mode)
 {
 	struct tda998x_priv *priv = bridge_to_tda998x_priv(bridge);
 	unsigned long tmds_clock;
@@ -1370,14 +1347,14 @@ static void tda998x_bridge_mode_set(struct drm_bridge *bridge,
 	 * So we add +1 to all horizontal and vertical register values,
 	 * plus an additional +3 for REFPIX as we are using RGB input only.
 	 */
-	n_pix        = mode->htotal;
-	n_line       = mode->vtotal;
+	n_pix = mode->htotal;
+	n_line = mode->vtotal;
 
-	hs_pix_e     = mode->hsync_end - mode->hdisplay;
-	hs_pix_s     = mode->hsync_start - mode->hdisplay;
-	de_pix_e     = mode->htotal;
-	de_pix_s     = mode->htotal - mode->hdisplay;
-	ref_pix      = 3 + hs_pix_s;
+	hs_pix_e = mode->hsync_end - mode->hdisplay;
+	hs_pix_s = mode->hsync_start - mode->hdisplay;
+	de_pix_e = mode->htotal;
+	de_pix_s = mode->htotal - mode->hdisplay;
+	ref_pix = 3 + hs_pix_s;
 
 	/*
 	 * Attached LCD controllers may generate broken sync. Allow
@@ -1388,30 +1365,29 @@ static void tda998x_bridge_mode_set(struct drm_bridge *bridge,
 		ref_pix += adjusted_mode->hskew;
 
 	if ((mode->flags & DRM_MODE_FLAG_INTERLACE) == 0) {
-		ref_line     = 1 + mode->vsync_start - mode->vdisplay;
+		ref_line = 1 + mode->vsync_start - mode->vdisplay;
 		vwin1_line_s = mode->vtotal - mode->vdisplay - 1;
 		vwin1_line_e = vwin1_line_s + mode->vdisplay;
-		vs1_pix_s    = vs1_pix_e = hs_pix_s;
-		vs1_line_s   = mode->vsync_start - mode->vdisplay;
-		vs1_line_e   = vs1_line_s +
-			       mode->vsync_end - mode->vsync_start;
+		vs1_pix_s = vs1_pix_e = hs_pix_s;
+		vs1_line_s = mode->vsync_start - mode->vdisplay;
+		vs1_line_e = vs1_line_s + mode->vsync_end - mode->vsync_start;
 		vwin2_line_s = vwin2_line_e = 0;
-		vs2_pix_s    = vs2_pix_e  = 0;
-		vs2_line_s   = vs2_line_e = 0;
+		vs2_pix_s = vs2_pix_e = 0;
+		vs2_line_s = vs2_line_e = 0;
 	} else {
-		ref_line     = 1 + (mode->vsync_start - mode->vdisplay)/2;
-		vwin1_line_s = (mode->vtotal - mode->vdisplay)/2;
-		vwin1_line_e = vwin1_line_s + mode->vdisplay/2;
-		vs1_pix_s    = vs1_pix_e = hs_pix_s;
-		vs1_line_s   = (mode->vsync_start - mode->vdisplay)/2;
-		vs1_line_e   = vs1_line_s +
-			       (mode->vsync_end - mode->vsync_start)/2;
-		vwin2_line_s = vwin1_line_s + mode->vtotal/2;
-		vwin2_line_e = vwin2_line_s + mode->vdisplay/2;
-		vs2_pix_s    = vs2_pix_e = hs_pix_s + mode->htotal/2;
-		vs2_line_s   = vs1_line_s + mode->vtotal/2 ;
-		vs2_line_e   = vs2_line_s +
-			       (mode->vsync_end - mode->vsync_start)/2;
+		ref_line = 1 + (mode->vsync_start - mode->vdisplay) / 2;
+		vwin1_line_s = (mode->vtotal - mode->vdisplay) / 2;
+		vwin1_line_e = vwin1_line_s + mode->vdisplay / 2;
+		vs1_pix_s = vs1_pix_e = hs_pix_s;
+		vs1_line_s = (mode->vsync_start - mode->vdisplay) / 2;
+		vs1_line_e =
+			vs1_line_s + (mode->vsync_end - mode->vsync_start) / 2;
+		vwin2_line_s = vwin1_line_s + mode->vtotal / 2;
+		vwin2_line_e = vwin2_line_s + mode->vdisplay / 2;
+		vs2_pix_s = vs2_pix_e = hs_pix_s + mode->htotal / 2;
+		vs2_line_s = vs1_line_s + mode->vtotal / 2;
+		vs2_line_e =
+			vs2_line_s + (mode->vsync_end - mode->vsync_start) / 2;
 	}
 
 	tmds_clock = mode->clock;
@@ -1439,31 +1415,32 @@ static void tda998x_bridge_mode_set(struct drm_bridge *bridge,
 	reg_write(priv, REG_ENC_CNTRL, ENC_CNTRL_CTL_CODE(0));
 
 	/* no pre-filter or interpolator: */
-	reg_write(priv, REG_HVF_CNTRL_0, HVF_CNTRL_0_PREFIL(0) |
-			HVF_CNTRL_0_INTPOL(0));
+	reg_write(priv, REG_HVF_CNTRL_0,
+		  HVF_CNTRL_0_PREFIL(0) | HVF_CNTRL_0_INTPOL(0));
 	reg_set(priv, REG_FEAT_POWERDOWN, FEAT_POWERDOWN_PREFILT);
 	reg_write(priv, REG_VIP_CNTRL_5, VIP_CNTRL_5_SP_CNT(0));
-	reg_write(priv, REG_VIP_CNTRL_4, VIP_CNTRL_4_BLANKIT(0) |
-			VIP_CNTRL_4_BLC(0));
+	reg_write(priv, REG_VIP_CNTRL_4,
+		  VIP_CNTRL_4_BLANKIT(0) | VIP_CNTRL_4_BLC(0));
 
 	reg_clear(priv, REG_PLL_SERIAL_1, PLL_SERIAL_1_SRL_MAN_IZ);
-	reg_clear(priv, REG_PLL_SERIAL_3, PLL_SERIAL_3_SRL_CCIR |
-					  PLL_SERIAL_3_SRL_DE);
+	reg_clear(priv, REG_PLL_SERIAL_3,
+		  PLL_SERIAL_3_SRL_CCIR | PLL_SERIAL_3_SRL_DE);
 	reg_write(priv, REG_SERIALIZER, 0);
 	reg_write(priv, REG_HVF_CNTRL_1, HVF_CNTRL_1_VQR(0));
 
 	/* TODO enable pixel repeat for pixel rates less than 25Msamp/s */
 	rep = 0;
 	reg_write(priv, REG_RPT_CNTRL, 0);
-	reg_write(priv, REG_SEL_CLK, SEL_CLK_SEL_VRF_CLK(0) |
-			SEL_CLK_SEL_CLK1 | SEL_CLK_ENA_SC_CLK);
+	reg_write(priv, REG_SEL_CLK,
+		  SEL_CLK_SEL_VRF_CLK(0) | SEL_CLK_SEL_CLK1 |
+			  SEL_CLK_ENA_SC_CLK);
 
-	reg_write(priv, REG_PLL_SERIAL_2, PLL_SERIAL_2_SRL_NOSC(div) |
-			PLL_SERIAL_2_SRL_PR(rep));
+	reg_write(priv, REG_PLL_SERIAL_2,
+		  PLL_SERIAL_2_SRL_NOSC(div) | PLL_SERIAL_2_SRL_PR(rep));
 
 	/* set color matrix bypass flag: */
-	reg_write(priv, REG_MAT_CONTRL, MAT_CONTRL_MAT_BP |
-				MAT_CONTRL_MAT_SC(1));
+	reg_write(priv, REG_MAT_CONTRL,
+		  MAT_CONTRL_MAT_BP | MAT_CONTRL_MAT_SC(1));
 	reg_set(priv, REG_FEAT_POWERDOWN, FEAT_POWERDOWN_CSC);
 
 	/* set BIAS tmds value: */
@@ -1589,12 +1566,12 @@ static int tda998x_get_audio_ports(struct tda998x_priv *priv,
 	size /= 2;
 
 	for (i = 0; i < size; i++) {
-		u8 afmt = be32_to_cpup(&port_data[2*i]);
-		u8 ena_ap = be32_to_cpup(&port_data[2*i+1]);
+		u8 afmt = be32_to_cpup(&port_data[2 * i]);
+		u8 ena_ap = be32_to_cpup(&port_data[2 * i + 1]);
 
 		if (afmt != AFMT_SPDIF && afmt != AFMT_I2S) {
-			dev_err(&priv->hdmi->dev,
-				"Bad audio format %u\n", afmt);
+			dev_err(&priv->hdmi->dev, "Bad audio format %u\n",
+				afmt);
 			return -EINVAL;
 		}
 
@@ -1669,7 +1646,7 @@ static int tda998x_create(struct device *dev)
 
 	dev_set_drvdata(dev, priv);
 
-	mutex_init(&priv->mutex);	/* protect the page access */
+	mutex_init(&priv->mutex); /* protect the page access */
 	mutex_init(&priv->audio_mutex); /* protect access from audio thread */
 	mutex_init(&priv->edid_mutex);
 	INIT_LIST_HEAD(&priv->bridge.list);
@@ -1688,7 +1665,7 @@ static int tda998x_create(struct device *dev)
 
 	/* wake up the device: */
 	cec_write(priv, REG_CEC_ENAMODS,
-			CEC_ENAMODS_EN_RXSENS | CEC_ENAMODS_EN_HDMI);
+		  CEC_ENAMODS_EN_RXSENS | CEC_ENAMODS_EN_HDMI);
 
 	tda998x_reset(priv);
 
@@ -1739,7 +1716,8 @@ static int tda998x_create(struct device *dev)
 		reg_set(priv, REG_I2C_MASTER, I2C_MASTER_DIS_MM);
 
 	cec_write(priv, REG_CEC_FRO_IM_CLK_CTRL,
-			CEC_FRO_IM_CLK_CTRL_GHOST_DIS | CEC_FRO_IM_CLK_CTRL_IMCLK_SEL);
+		  CEC_FRO_IM_CLK_CTRL_GHOST_DIS |
+			  CEC_FRO_IM_CLK_CTRL_IMCLK_SEL);
 
 	/* ensure interrupts are disabled */
 	cec_write(priv, REG_CEC_RXSHPDINTENA, 0);
@@ -1911,8 +1889,8 @@ static const struct component_ops tda998x_ops = {
 	.unbind = tda998x_unbind,
 };
 
-static int
-tda998x_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int tda998x_probe(struct i2c_client *client,
+			 const struct i2c_device_id *id)
 {
 	int ret;
 
@@ -1940,16 +1918,15 @@ static int tda998x_remove(struct i2c_client *client)
 
 #ifdef CONFIG_OF
 static const struct of_device_id tda998x_dt_ids[] = {
-	{ .compatible = "nxp,tda998x", },
-	{ }
+	{
+		.compatible = "nxp,tda998x",
+	},
+	{}
 };
 MODULE_DEVICE_TABLE(of, tda998x_dt_ids);
 #endif
 
-static const struct i2c_device_id tda998x_ids[] = {
-	{ "tda998x", 0 },
-	{ }
-};
+static const struct i2c_device_id tda998x_ids[] = { { "tda998x", 0 }, {} };
 MODULE_DEVICE_TABLE(i2c, tda998x_ids);
 
 static struct i2c_driver tda998x_driver = {

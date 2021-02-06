@@ -342,7 +342,6 @@ int vt_ioctl(struct tty_struct *tty,
 	int i, perm;
 	int ret = 0;
 
-	console = vc->vc_num;
 
 
 	if (!vc_cons_allocated(console)) { 	/* impossible? */

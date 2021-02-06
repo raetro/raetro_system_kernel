@@ -215,6 +215,8 @@ static int dwc2_hs_phy_init(struct dwc2_hsotg *hsotg, bool select_phy)
 		dev_dbg(hsotg->dev, "HS ULPI PHY selected\n");
 		usbcfg |= GUSBCFG_ULPI_UTMI_SEL;
 		usbcfg &= ~(GUSBCFG_PHYIF16 | GUSBCFG_DDRSEL);
+		usbcfg |= (GUSBCFG_ULPI_INT_VBUS_IND |
+				GUSBCFG_INDICATORPASSTHROUGH);
 		if (hsotg->params.phy_ulpi_ddr)
 			usbcfg |= GUSBCFG_DDRSEL;
 

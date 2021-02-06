@@ -1,0 +1,12 @@
+config RTL8821AU
+	tristate "Realtek 8812A/8821A USB WiFi"
+	depends on USB
+	---help---
+	  Help message of RTL8821AU
+
+config BT_COEXIST_8821
+	bool "BT co-exist"
+	depends on RTL8821AU
+	---help---
+	  Help message of BT_COEXIST_8821
+
